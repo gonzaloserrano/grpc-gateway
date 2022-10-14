@@ -8,6 +8,8 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/internal/codegenerator"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/internal/descriptor/openapiconfig"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"google.golang.org/genproto/googleapis/api/annotations"
@@ -187,12 +189,15 @@ func (r *Registry) LoadFromPlugin(gen *protogen.Plugin) error {
 }
 
 func (r *Registry) load(gen *protogen.Plugin) error {
-	for filePath, f := range gen.FilesByPath {
-		r.loadFile(filePath, f)
+	filePaths := maps.Keys(gen.FilesByPath)
+	slices.Sort(filePaths)
+
+	for _, filePath := range filePaths {
+		r.loadFile(filePath, gen.FilesByPath[filePath])
 	}
 
-	for filePath, f := range gen.FilesByPath {
-		if !f.Generate {
+	for _, filePath := range filePaths {
+		if !gen.FilesByPath[filePath].Generate {
 			continue
 		}
 		file := r.files[filePath]
